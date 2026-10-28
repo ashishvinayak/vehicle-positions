@@ -1,0 +1,13 @@
+package de.ashish.vehicles;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class VehiclePositionsApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
