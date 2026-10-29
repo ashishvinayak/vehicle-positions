@@ -11,8 +11,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 public class PositionSimulator {
-    private static final double STOP_LAT = 52.5251;
-    private static final double STOP_LONG = 13.3694;
     private static final double STEP_FRACTION = 0.02;
     private static final double NOISE_DEG = 0.00005;
 
@@ -37,8 +35,8 @@ public class PositionSimulator {
 
     private VehiclePosition move(VehiclePosition vehiclePosition, Instant now) {
         var random = ThreadLocalRandom.current();
-        double lat = vehiclePosition.latitude() +  (STOP_LAT - vehiclePosition.latitude()) * STEP_FRACTION + random.nextGaussian() * NOISE_DEG;
-        double lon = vehiclePosition.longitude() + (STOP_LONG - vehiclePosition.longitude()) * STEP_FRACTION + random.nextGaussian() * NOISE_DEG;
+        double lat = vehiclePosition.latitude() +  (Geofence.STOP_LAT - vehiclePosition.latitude()) * STEP_FRACTION + random.nextGaussian() * NOISE_DEG;
+        double lon = vehiclePosition.longitude() + (Geofence.STOP_LON - vehiclePosition.longitude()) * STEP_FRACTION + random.nextGaussian() * NOISE_DEG;
         return new VehiclePosition(vehiclePosition.vehicleId(), lat, lon, now);
     }
 }

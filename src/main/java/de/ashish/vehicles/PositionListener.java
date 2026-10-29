@@ -10,19 +10,25 @@ import org.springframework.stereotype.Component;
 public class PositionListener {
     private static final Logger log = LoggerFactory.getLogger(PositionListener.class);
     private final VehiclePositionRepository repository;
+    private final ArrivalDetector  arrivalDetector;
 
-    public PositionListener(VehiclePositionRepository repository) {
+    public PositionListener(VehiclePositionRepository repository, ArrivalDetector arrivalDetector) {
         this.repository = repository;
+        this.arrivalDetector = arrivalDetector;
     }
 
     @KafkaListener(topics = KafkaConfig.POSITIONS_TOPIC)
     void receive(ConsumerRecord<String, VehiclePosition> record) {
         VehiclePosition vehiclePosition = record.value();
+        double distance = Geofence.distanceToStopMeters(vehiclePosition.latitude(), vehiclePosition.longitude());
+        if (arrivalDetector.isArrival(vehiclePosition.vehicleId(), distance)) {
+            log.info("Arrival vehicle-id = {} at stop {} (distance = {})", vehiclePosition.vehicleId(), Geofence.STOP_ID, Math.round(distance));
+        }
         repository.save(new VehiclePositionEntity(vehiclePosition.vehicleId(), vehiclePosition.latitude(),
                 vehiclePosition.longitude(), vehiclePosition.timestamp()));
-        log.info("vehicle-id = {}, partition = {}, offset = {}, lat = {}, long = {}, time = {}",
+        /*log.info("vehicle-id = {}, partition = {}, offset = {}, lat = {}, long = {}, time = {}",
                 vehiclePosition.vehicleId(),
                 record.partition(), record.offset(), vehiclePosition.latitude(),
-                vehiclePosition.longitude(), vehiclePosition.timestamp());
+                vehiclePosition.longitude(), vehiclePosition.timestamp());*/
     }
 }
