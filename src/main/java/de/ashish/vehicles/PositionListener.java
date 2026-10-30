@@ -3,6 +3,7 @@ package de.ashish.vehicles;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -11,10 +12,12 @@ public class PositionListener {
     private static final Logger log = LoggerFactory.getLogger(PositionListener.class);
     private final VehiclePositionRepository repository;
     private final ArrivalDetector  arrivalDetector;
+    private final RabbitTemplate  rabbitTemplate;
 
-    public PositionListener(VehiclePositionRepository repository, ArrivalDetector arrivalDetector) {
+    public PositionListener(VehiclePositionRepository repository, ArrivalDetector arrivalDetector, RabbitTemplate rabbitTemplate) {
         this.repository = repository;
         this.arrivalDetector = arrivalDetector;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @KafkaListener(topics = KafkaConfig.POSITIONS_TOPIC)
@@ -23,6 +26,8 @@ public class PositionListener {
         double distance = Geofence.distanceToStopMeters(vehiclePosition.latitude(), vehiclePosition.longitude());
         if (arrivalDetector.isArrival(vehiclePosition.vehicleId(), distance)) {
             log.info("Arrival vehicle-id = {} at stop {} (distance = {})", vehiclePosition.vehicleId(), Geofence.STOP_ID, Math.round(distance));
+            ArrivalEvent event = new ArrivalEvent(vehiclePosition.vehicleId(), Geofence.STOP_ID, vehiclePosition.timestamp());
+            rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "arrival." + Geofence.STOP_ID, event);
         }
         repository.save(new VehiclePositionEntity(vehiclePosition.vehicleId(), vehiclePosition.latitude(),
                 vehiclePosition.longitude(), vehiclePosition.timestamp()));
