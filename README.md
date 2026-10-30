@@ -1,4 +1,4 @@
-# Depot Tracker
+# Positional Tracker
 
 A small Spring Boot project for learning Kafka and RabbitMQ. Simulated buses send their positions to Kafka. A consumer stores the latest position of each bus in PostgreSQL and publishes an arrival event to RabbitMQ when a bus reaches a stop.
 
